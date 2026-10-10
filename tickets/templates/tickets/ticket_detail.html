@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Details</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            color: #1e293b;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 25px 7%;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px #00000010;
+        }
+
+        .label {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            margin-top: 0;
+            margin-bottom: 22px;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            margin-bottom: 20px;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+            main {
+                margin: 20px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Internal Helpdesk</h1>
+        <p>Ticket Information</p>
+    </header>
+
+    <main>
+        <p><a href="{% url 'ticket_list' %}">← Back to Dashboard</a></p>
+
+        <h2>{{ ticket.title }}</h2>
+
+        <p class="label">Description</p>
+        <p class="value">{{ ticket.description }}</p>
+
+        <p class="label">Category</p>
+        <p class="value">{{ ticket.category }}</p>
+
+
+        <p class="label">Assigned Staff</p>
+
+        <p class="value">
+            {% if ticket.assigned_to %}
+            {{ ticket.assigned_to.username }}
+            {% else %}
+            Not assigned yet
+            {% endif %}
+        </p>
+
+        <form method="POST" action="{% url 'assign_ticket' ticket.id %}">
+            {% csrf_token %}
+
+            <label for="assigned_to">Assign to Staff:</label>
+
+            <select name="assigned_to" id="assigned_to" style="padding: 10px; margin: 10px; border-radius: 6px;">
+                <option value="">Unassigned</option>
+
+                {% for staff in staff_members %}
+
+                <option value="{{ staff.id }}">
+
+                    {{ staff.username }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit"
+                style="padding: 10px 16px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                Assign Staff
+            </button>
+        </form>
+
+        <p class="label">Priority</p>
+        <p class="value"><span class="badge">{{ ticket.priority }}</span></p>
+
+
+        <p class="label">Status</p>
+        <p class="value">
+            <span class="badge">{{ ticket.get_status_display }}</span>
+        </p>
+
+        <form method="POST" action="{% url 'update_ticket_status' ticket.id %}">
+            {% csrf_token %}
+
+            <label for="status">Change Ticket Status:</label>
+
+
+            <select name="status" id="status" style="padding: 10px; margin: 10px; border-radius: 6px;">
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+            </select>
+
+            <button type="submit"
+                style="padding: 10px 16px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                Update Status
+            </button>
+        </form>
+
+        <p class="label">Created At</p>
+        <p class="value">{{ ticket.created_at|date:"d M Y, h:i A" }}</p>
+
+        <p class="label">Last Updated</p>
+        <p class="value">{{ ticket.updated_at|date:"d M Y, h:i A" }}</p>
+    </main>
+</body>
+
+</html>

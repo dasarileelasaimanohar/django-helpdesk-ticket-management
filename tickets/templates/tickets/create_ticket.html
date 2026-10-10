@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Support Ticket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            margin: 0;
+            color: #172554;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 25px 6%;
+        }
+
+        main {
+            max-width: 650px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 5px 20px #00000010;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        form p {
+            margin-bottom: 20px;
+        }
+
+        input,
+        textarea,
+        select {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin-top: 7px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            padding: 12px 22px;
+            border: 0;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Internal Helpdesk</h1>
+        <p>Submit a new support request</p>
+    </header>
+
+    <main>
+        <h1>Create New Ticket</h1>
+        <p>Describe the problem you need help with.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Submit Ticket</button>
+        </form>
+
+        <p><a href="{% url 'ticket_list' %}">← Back to Dashboard</a></p>
+    </main>
+</body>
+
+</html>
