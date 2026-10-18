@@ -16,16 +16,30 @@ def ticket_list(request):
     return render(request, 'tickets/ticket_list.html', context)
 
 
+
+
 def create_ticket(request):
     if request.method == 'POST':
         form = TicketForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('ticket_list')
+            ticket = form.save(commit=False)
+            if request.user.is_authenticated:
+                ticket.created_by = request.user
+            else:
+                from django.contrib.auth.models import User
+                ticket.created_by = User.objects.filter(is_superuser=True).first()
+
+            if ticket.created_by is None:
+                form.add_error(None, "Please log in before creating a ticket.")
+            else:
+                ticket.save()
+                return redirect('ticket_list')
     else:
         form = TicketForm()
 
     return render(request, 'tickets/create_ticket.html', {'form': form})
+
+
     
 
 def ticket_detail(request, ticket_id):
