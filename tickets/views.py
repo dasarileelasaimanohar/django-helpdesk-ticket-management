@@ -1,9 +1,21 @@
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
 from .models import Ticket
 from .forms import TicketForm
 
 
+def admin_required(view_func):
+    return user_passes_test(
+        lambda user: user.is_authenticated and user.is_superuser
+    )(view_func)
+
+
+@login_required
 def ticket_list(request):
     tickets = Ticket.objects.all().order_by('-created_at')
 
@@ -16,36 +28,25 @@ def ticket_list(request):
     return render(request, 'tickets/ticket_list.html', context)
 
 
-
-
+@login_required
 def create_ticket(request):
     if request.method == 'POST':
         form = TicketForm(request.POST)
+
         if form.is_valid():
             ticket = form.save(commit=False)
-            if request.user.is_authenticated:
-                ticket.created_by = request.user
-            else:
-                from django.contrib.auth.models import User
-                ticket.created_by = User.objects.filter(is_superuser=True).first()
+            ticket.created_by = request.user
+            ticket.save()
 
-            if ticket.created_by is None:
-                form.add_error(None, "Please log in before creating a ticket.")
-            else:
-                ticket.save()
-                return redirect('ticket_list')
+            return redirect('ticket_list')
     else:
         form = TicketForm()
 
     return render(request, 'tickets/create_ticket.html', {'form': form})
 
 
-    
-
+@login_required
 def ticket_detail(request, ticket_id):
-    from django.shortcuts import get_object_or_404
-    from django.contrib.auth.models import User
-
     ticket = get_object_or_404(Ticket, id=ticket_id)
     staff_members = User.objects.filter(is_staff=True)
 
@@ -57,12 +58,10 @@ def ticket_detail(request, ticket_id):
             'staff_members': staff_members,
         }
     )
-    
-def update_ticket_status(request, ticket_id):
-    from django.shortcuts import get_object_or_404
-    from django.http import HttpResponseRedirect
-    from django.urls import reverse
 
+
+@admin_required
+def update_ticket_status(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
 
     if request.method == 'POST':
@@ -79,18 +78,21 @@ def update_ticket_status(request, ticket_id):
         )
 
     return redirect('ticket_detail', ticket_id=ticket.id)
-    
-def assign_ticket(request, ticket_id):
-    from django.shortcuts import get_object_or_404
-    from django.contrib.auth.models import User
 
+
+@admin_required
+def assign_ticket(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
 
     if request.method == 'POST':
         staff_id = request.POST.get('assigned_to')
 
         if staff_id:
-            staff = get_object_or_404(User, id=staff_id, is_staff=True)
+            staff = get_object_or_404(
+                User,
+                id=staff_id,
+                is_staff=True
+            )
             ticket.assigned_to = staff
         else:
             ticket.assigned_to = None
